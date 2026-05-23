@@ -241,6 +241,11 @@
   color: var(--bg);
 }
 
+/* ---- Utilidades de grid (faltaban globalmente) --------------------------- */
+
+.span-6 { grid-column: span 6; }
+.span-12 { grid-column: span 12; }
+
 /* ---- Career Overview (.co) ----------------------------------------------- */
 
 .co {
