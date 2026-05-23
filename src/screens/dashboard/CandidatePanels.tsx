@@ -4,9 +4,15 @@
    ============================================================================= */
 
 import { Gauge, Panel } from '@/components';
-import { CANDIDATE } from '@/content';
+import {
+  CANDIDATE,
+  DEMOGRAPHIC_LABELS,
+  EXTRA_VITALS,
+  IMAGE_VITAL_NOTES,
+  MOMENTUM_FACTORS,
+} from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
-import { EXTRA_VITALS, MOMENTUM_FACTORS } from './dashData';
 
 /** Banda de color de un valor 0…100. */
 function band(value: number): 'good' | 'ok' | 'low' | 'bad' {
@@ -49,13 +55,13 @@ export function VitalsPanel() {
   const image = useGameStore((s) => s.candidate.image);
 
   const vitals: VitalRow[] = [
-    EXTRA_VITALS[0],
-    { label: 'CHARISMA', value: image.charisma, note: 'Top quintil nacional' },
-    { label: 'COMPETENCE', value: image.competence, note: 'Fortaleza histórica' },
-    { label: 'INTEGRITY', value: image.integrity, note: 'Fideicomiso 2021 · −12' },
-    { label: 'DECISIVENESS', value: image.decisiveness, note: 'Crítico para el debate', warn: true },
-    EXTRA_VITALS[1],
-    EXTRA_VITALS[2],
+    assertDefined(EXTRA_VITALS[0], 'EXTRA_VITALS tiene 3 entradas'),
+    { label: 'CHARISMA', value: image.charisma, note: IMAGE_VITAL_NOTES.charisma ?? '' },
+    { label: 'COMPETENCE', value: image.competence, note: IMAGE_VITAL_NOTES.competence ?? '' },
+    { label: 'INTEGRITY', value: image.integrity, note: IMAGE_VITAL_NOTES.integrity ?? '' },
+    { label: 'DECISIVENESS', value: image.decisiveness, note: IMAGE_VITAL_NOTES.decisiveness ?? '', warn: true },
+    assertDefined(EXTRA_VITALS[1], 'EXTRA_VITALS tiene 3 entradas'),
+    assertDefined(EXTRA_VITALS[2], 'EXTRA_VITALS tiene 3 entradas'),
   ];
 
   return (
@@ -114,16 +120,6 @@ export function MomentumPanel() {
 
 /* ---- 09 · Aprobación demográfica ------------------------------------------- */
 
-const DEMO_LABELS: Record<string, string> = {
-  national: 'NACIONAL',
-  men: 'HOMBRES',
-  women: 'MUJERES',
-  youth: 'JÓVENES',
-  elders: 'MAYORES',
-  urban: 'URBANO',
-  rural: 'RURAL',
-};
-
 export function DemographicsPanel() {
   const approval = useGameStore((s) => s.candidate.approval);
   const rows = Object.entries(approval) as [string, number][];
@@ -133,7 +129,7 @@ export function DemographicsPanel() {
       <div className="appdemo">
         {rows.map(([key, value]) => (
           <div className="appdemo__row" key={key}>
-            <span className="appdemo__label mono">{DEMO_LABELS[key] ?? key.toUpperCase()}</span>
+            <span className="appdemo__label mono">{DEMOGRAPHIC_LABELS[key] ?? key.toUpperCase()}</span>
             <div className="appdemo__track">
               <div
                 className="appdemo__fill"

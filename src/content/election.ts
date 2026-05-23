@@ -1,18 +1,18 @@
 /* =============================================================================
-   ELECTION NIGHT — Datos de la cobertura
-   Resultados de la jornada y guion de la transmisión. Es un escenario fijo: la
-   noche electoral muestra un snapshot, no una simulación en vivo.
+   CONTENT — Noche Electoral
+   Snapshot fijo de la cobertura: resultados, analistas, ticker breaking, curva
+   de swing y datos de turnout. Es contenido de diseño — un guion de la noche.
    ============================================================================= */
 
-import type { PartyId } from '@/content';
+import type { PartyId } from './types';
 
+/** Proyección nacional al porcentaje REPORTING de mesas. */
 export interface ElectionResult {
-  party: PartyId;
-  candidate: string;
-  pct: number;
+  readonly party: PartyId;
+  readonly candidate: string;
+  readonly pct: number;
 }
 
-/** Proyección nacional con el escrutinio al REPORTING %. */
 export const ELECTION_RESULTS: readonly ElectionResult[] = [
   { party: 'PRD', candidate: 'Vasconcelos', pct: 29.4 },
   { party: 'MNP', candidate: 'Orellana', pct: 28.1 },
@@ -21,14 +21,18 @@ export const ELECTION_RESULTS: readonly ElectionResult[] = [
   { party: 'IND', candidate: 'Otros', pct: 6.5 },
 ];
 
-/** Porcentaje de mesas escrutadas a esta altura de la noche. */
-export const REPORTING = 38;
+/** % de mesas escrutadas que se muestra como "estado de la cobertura". */
+export const REPORTING_PCT = 38;
 
+/** Reloj congelado que ve el espectador. La noche electoral es un snapshot. */
+export const SHOW_TIME = '22:47';
+
+/** Analistas en cabina, con cita atribuida. */
 export interface Anchor {
-  cam: string;
-  name: string;
-  role: string;
-  quote: string;
+  readonly cam: string;
+  readonly name: string;
+  readonly role: string;
+  readonly quote: string;
 }
 
 export const ANCHORS: readonly Anchor[] = [
@@ -48,7 +52,8 @@ export const ANCHORS: readonly Anchor[] = [
   },
 ];
 
-export const BREAKING: readonly string[] = [
+/** Titulares que rotan en el ticker rojo inferior. */
+export const BREAKING_HEADLINES: readonly string[] = [
   'PRD AL FRENTE EN PROYECCIÓN NACIONAL · MARGEN ±0.4 pt',
   'COSTA ATLÁNTICA REPORTA AL 71% · VASCONCELOS LIDERA',
   'LLANOS OCCIDENTALES SORPRENDE · PRD CRECE 11 pt',
@@ -59,12 +64,32 @@ export const BREAKING: readonly string[] = [
   'MERCADOS REGIONALES REACCIONAN · BOLSA +1.8%',
 ];
 
-/** Curva de swing PRD–MNP (puntos de un sparkline, valores fijos). */
+/** Sparkline PRD–MNP que se muestra en el panel "swing dramático". */
 export const SWING_CURVE: readonly number[] = [
   41, 44, 42, 47, 45, 50, 52, 49, 53, 55, 52, 56, 58, 61,
 ];
 
-/** Escrutinio determinista por provincia (sin reloj). */
+/** Turnout esperado y comparativo por segmento. */
+export const TURNOUT_REPORT = {
+  current: 67.4,
+  segments: [
+    { label: 'JÓVENES 18-29', delta: '+8.1pt', tone: 'pos' as const },
+    { label: 'RURAL', delta: '−2.4pt', tone: 'neg' as const },
+    { label: 'METRO AURORA', delta: '+5.6pt', tone: 'pos' as const },
+  ],
+} as const;
+
+/** Tres tarjetas de la franja inferior de Election Night. */
+export const ELECTION_LOWER_STATS = {
+  margin: { label: 'VENTAJA · 1° vs 2°', sub: 'pts nacional' },
+  turnout: { label: 'TURNOUT', value: '67.4%', sub: 'vs 64.1% (2022) · +3.3' },
+  confidence: { label: 'CONFIANZA · MODELO', value: '92%', sub: 'PROYECCIÓN · GANADOR PRD' },
+} as const;
+
+/**
+ * Escrutinio determinista por provincia. Estable entre renders (no usa reloj).
+ * Reemplazará a un cálculo real cuando exista la simulación de noche electoral.
+ */
 export function reportedPercent(provinceId: string): number {
   const seed = provinceId.charCodeAt(0) * 7 + (provinceId.charCodeAt(1) || 0) * 3;
   return Math.min(100, seed % 116);

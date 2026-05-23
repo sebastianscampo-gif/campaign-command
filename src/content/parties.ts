@@ -4,7 +4,12 @@
 
 import type { Party, PartyId } from './types';
 
-export const PARTIES: Readonly<Record<PartyId, Party>> = {
+/**
+ * Catálogo de partidos. `satisfies` mantiene los tipos literales por clave
+ * (de modo que `PARTIES.PRD` y `PARTIES[partyId]` quedan tipados sin
+ * `| undefined` bajo `noUncheckedIndexedAccess`).
+ */
+export const PARTIES = {
   PRD: {
     id: 'PRD',
     name: 'Partido Republicano Democrático',
@@ -50,7 +55,7 @@ export const PARTIES: Readonly<Record<PartyId, Party>> = {
     leader: '—',
     founded: null,
   },
-};
+} as const satisfies Readonly<Record<PartyId, Party>>;
 
 /** Orden canónico de partidos para gráficos y leyendas. */
 export const PARTY_ORDER: readonly PartyId[] = [

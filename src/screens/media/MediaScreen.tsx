@@ -8,8 +8,13 @@ import { useState } from 'react';
 import { Sparkline } from '@/components';
 import { useUiStore } from '@/state/uiStore';
 import { LiveTVPane, MepCard, PodcastsPane, PressPane, StreamPane } from './MediaPanes';
-import { FRAMES, POSTS, PRESS_RELEASES, TRENDS } from './mediaData';
-import type { MediaTab } from './mediaData';
+import {
+  MEDIA_FRAMES,
+  MEDIA_POSTS,
+  MEDIA_TRENDS,
+  PRESS_RELEASES,
+} from '@/content';
+import type { MediaTab } from '@/content';
 
 const TABS: readonly { id: MediaTab; label: string }[] = [
   { id: 'stream', label: '◐ STREAM' },
@@ -68,7 +73,7 @@ export function MediaScreen() {
 
       <aside className="mediaeco__left">
         <MepCard title="STREAM · PULSE FEED" meta="LIVE · 1.4k/min" flush>
-          {POSTS.map((post) => (
+          {MEDIA_POSTS.map((post) => (
             <article className="mep-post" key={post.handle}>
               <div className="mep-post__avatar" style={{ background: post.color }}>
                 {initials(post.user)}
@@ -104,7 +109,7 @@ export function MediaScreen() {
 
       <aside className="mediaeco__right">
         <MepCard title="TENDENCIAS · NACIONAL" meta="06" flush>
-          {TRENDS.map((trend, i) => (
+          {MEDIA_TRENDS.map((trend, i) => (
             <div className="mep-trend" key={trend.tag}>
               <span className="mep-trend__rank mono">{String(i + 1).padStart(2, '0')}</span>
               <span className="mep-trend__tag">{trend.tag}</span>
@@ -158,7 +163,7 @@ export function MediaScreen() {
           <span>08 ACTIVOS · 4.2M VIEWS / 24H</span>
         </div>
         <div className="mediaeco__frames">
-          {FRAMES.map((frame) => (
+          {MEDIA_FRAMES.map((frame) => (
             <div className="mep-frame" key={frame.handle}>
               <span className="mep-frame__views mono">● {frame.views}</span>
               <div className="mep-frame__caption mono">

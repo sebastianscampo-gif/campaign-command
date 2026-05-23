@@ -3,28 +3,32 @@
    Pantalla grande de tendencia de encuestas.
    ============================================================================= */
 
+import { useMemo } from 'react';
 import { LineChart, Panel } from '@/components';
 import type { ChartPoint, ChartSeries } from '@/components';
 import { PARTIES } from '@/content';
 import type { PartyId } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 
 const SERIES_PARTIES: readonly PartyId[] = ['PRD', 'MNP', 'FAS', 'VC'];
 
+// Las series son fijas — no dependen del estado, no necesitan recalcularse.
+const SERIES: ChartSeries[] = SERIES_PARTIES.map((id) => ({
+  key: id,
+  label: PARTIES[id].short,
+  color: PARTIES[id].color,
+}));
+
 export function PollingPanel() {
   const polling = useGameStore((s) => s.polling);
-  const latest = polling[polling.length - 1];
-  const first = polling[0];
+  const latest = assertDefined(polling[polling.length - 1], 'polling no vacío');
+  const first = assertDefined(polling[0], 'polling no vacío');
 
-  const data: ChartPoint[] = polling.map((point) => ({
-    label: point.week,
-    values: point.intent,
-  }));
-  const series: ChartSeries[] = SERIES_PARTIES.map((id) => ({
-    key: id,
-    label: PARTIES[id].short,
-    color: PARTIES[id].color,
-  }));
+  const data = useMemo<ChartPoint[]>(
+    () => polling.map((point) => ({ label: point.week, values: point.intent })),
+    [polling],
+  );
 
   return (
     <Panel
@@ -39,7 +43,7 @@ export function PollingPanel() {
           <span>S-12 → S-1 · 12 SEMANAS</span>
         </div>
         <div className="bigscreen__chart">
-          <LineChart data={data} series={series} width={760} height={260} />
+          <LineChart data={data} series={SERIES} width={760} height={260} />
           <div className="bigscreen__sweep" aria-hidden="true" />
         </div>
         <div className="bigscreen__foot mono">

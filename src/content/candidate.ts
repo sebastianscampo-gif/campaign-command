@@ -25,3 +25,9 @@ export const CANDIDATE: Candidate = {
     { year: 2021, severity: 'medio', label: 'Caso fideicomiso educativo' },
   ],
 };
+
+/** Etiqueta de rol corta para el hero del dashboard. */
+export const CANDIDATE_HERO_ROLE = 'SENADORA NACIONAL · 24 AÑOS EN POLÍTICA';
+
+/** Etiqueta de rol para el dossier modal. */
+export const CANDIDATE_DOSSIER_ROLE = 'CANDIDATA PRESIDENCIAL · PRD · 2026';

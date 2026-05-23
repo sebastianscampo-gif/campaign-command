@@ -5,7 +5,8 @@
    ============================================================================= */
 
 import { NumberTicker } from '@/components';
-import { CANDIDATE } from '@/content';
+import { CANDIDATE, CANDIDATE_HERO_ROLE } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 
@@ -61,8 +62,8 @@ export function DashHero() {
   const activeEvent = useGameStore((s) => s.activeEvent);
   const openModal = useUiStore((s) => s.openModal);
 
-  const latest = polling[polling.length - 1];
-  const prev = polling[polling.length - 2];
+  const latest = assertDefined(polling[polling.length - 1], 'polling tiene al menos 2 puntos');
+  const prev = assertDefined(polling[polling.length - 2], 'polling tiene al menos 2 puntos');
   const intentDelta = Number((latest.intent.PRD - prev.intent.PRD).toFixed(1));
   const initials = CANDIDATE.name
     .split(' ')
@@ -111,7 +112,7 @@ export function DashHero() {
             Elena<br />
             <span>Vasconcelos</span>
           </h1>
-          <div className="hero__role mono">SENADORA NACIONAL · 24 AÑOS EN POLÍTICA</div>
+          <div className="hero__role mono">{CANDIDATE_HERO_ROLE}</div>
           <div className="hero__traits">
             {CANDIDATE.traits.map((trait) => (
               <span className="hero__trait" key={trait}>

@@ -5,7 +5,6 @@
    ============================================================================= */
 
 import type { ProvinceId } from './types';
-import type { Country } from './types';
 import type {
   CalendarEvent,
   CandidateStats,
@@ -18,17 +17,7 @@ import type {
   SocialPost,
   VoterBloc,
 } from '@/state/types';
-
-export const COUNTRY: Country = {
-  name: 'República de San Esteban',
-  short: 'San Esteban',
-  capital: 'Ciudad Aurora',
-  currency: 'PSE',
-  population: 26.9,
-  gdp: 412.8,
-  cycle: 'Elecciones Generales 2026',
-  date: '14 · Septiembre · 2026',
-};
+import { CAMPAIGN_TOTAL_DAYS, SCENARIO_START_DAY } from './country';
 
 const PROVINCE_DYNAMICS: Record<ProvinceId, ProvinceState> = {
   NF: {
@@ -207,8 +196,10 @@ const SOCIAL: SocialPost[] = [
  *  `resetGame()` arranque de datos limpios y no de referencias compartidas. */
 export function createInitialGameState(): GameSnapshot {
   return structuredClone({
-    day: 64,
-    totalDays: 92,
+    version: GAME_STATE_VERSION,
+    seed: DEFAULT_SEED,
+    day: SCENARIO_START_DAY,
+    totalDays: CAMPAIGN_TOTAL_DAYS,
     provinces: PROVINCE_DYNAMICS,
     candidate: CANDIDATE_STATS,
     polling: POLLING,
@@ -218,5 +209,16 @@ export function createInitialGameState(): GameSnapshot {
     news: NEWS,
     activeEvent: ACTIVE_EVENT,
     social: SOCIAL,
+    pendingActions: [],
+    actionHistory: [],
+    resolvedEvents: [],
+    currentTurnSummary: null,
+    lastSimulationResult: null,
   });
 }
+
+/** Versión del schema del save. Aumentar al cambiar la forma de GameSnapshot. */
+export const GAME_STATE_VERSION = 1;
+
+/** Semilla por defecto del PRNG cuando arranca un escenario fresco. */
+const DEFAULT_SEED = 0xc0ffee;

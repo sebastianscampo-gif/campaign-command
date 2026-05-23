@@ -19,6 +19,7 @@ import {
 import type { ChartPoint } from '@/components';
 import { PARTIES, PARTY_ORDER } from '@/content';
 import type { PartyId } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import type { VoteShare } from '@/state/types';
@@ -53,7 +54,7 @@ export function StyleGuideScreen() {
   const selectedProvince = useUiStore((s) => s.selectedProvince);
   const selectProvince = useUiStore((s) => s.selectProvince);
 
-  const latest = polling[polling.length - 1];
+  const latest = assertDefined(polling[polling.length - 1], 'polling no vacío');
 
   const chartData: ChartPoint[] = polling.map((point) => ({
     label: point.week,

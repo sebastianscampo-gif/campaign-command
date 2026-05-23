@@ -6,6 +6,14 @@
    ============================================================================= */
 
 import type { PartyId, ProvinceId } from '@/content/types';
+import type {
+  ActionKind,
+  CampaignAction,
+  ResolvedAction,
+  ResolvedEvent,
+  SimulationResult,
+  TurnSummary,
+} from '@/sim/types';
 
 /* ---- Navegación / UI -------------------------------------------------------- */
 
@@ -173,6 +181,10 @@ export interface SocialPost {
 
 /** Estado de simulación serializable. Lo que se siembra desde el escenario. */
 export interface GameSnapshot {
+  /** Versión del schema. Útil para migraciones de saves. */
+  version: number;
+  /** Semilla del PRNG — define la rama estocástica de esta partida. */
+  seed: number;
   day: number;
   totalDays: number;
   provinces: Record<ProvinceId, ProvinceState>;
@@ -184,12 +196,32 @@ export interface GameSnapshot {
   news: NewsItem[];
   activeEvent: GameEvent | null;
   social: SocialPost[];
+  /** Acciones encoladas por el jugador, pendientes de resolución. */
+  pendingActions: CampaignAction[];
+  /** Acciones ya resueltas en días previos. */
+  actionHistory: ResolvedAction[];
+  /** Eventos cerrados (crisis ya resueltas con su elección). */
+  resolvedEvents: ResolvedEvent[];
+  /** Resumen del último día simulado, para mostrar al jugador. */
+  currentTurnSummary: TurnSummary | null;
+  /** Resultado completo de la última simulación. Útil para devtools / replay. */
+  lastSimulationResult: SimulationResult | null;
 }
 
+/** Re-exporta tipos del sim para que consumidores no toquen `@/sim` directo
+ *  cuando solo necesitan tipos públicos del estado. */
+export type { ActionKind, CampaignAction, ResolvedAction, ResolvedEvent, TurnSummary };
+
 export interface GameActions {
-  /** Avanza un día de campaña (tope en el día de la elección). */
-  advanceDay: () => void;
-  /** Cierra el evento/crisis activo. */
+  /** Encola una acción del jugador para el día actual. */
+  queueCampaignAction: (kind: ActionKind, province?: ProvinceId) => void;
+  /** Cancela una acción aún no resuelta. */
+  cancelCampaignAction: (id: string) => void;
+  /** Aplica la elección del jugador frente al evento activo. */
+  resolveEventChoice: (optionIndex: number) => void;
+  /** Simula el próximo día (resuelve acciones, drift, avanza el calendario). */
+  simulateNextDay: () => void;
+  /** Cierra el evento/crisis activo sin aplicar elección. */
   dismissActiveEvent: () => void;
   /** Reinicia la simulación al escenario inicial. */
   resetGame: () => void;

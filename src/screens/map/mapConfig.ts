@@ -96,25 +96,6 @@ export const DEFAULT_LAYERS: LayerState = {
   grid: true,
 };
 
-/* ---- Acciones de campaña --------------------------------------------------- */
-
-export interface CampaignAction {
-  id: string;
-  label: string;
-  cost: string;
-  desc: string;
-  icon: string;
-}
-
-export const ACTIONS: readonly CampaignAction[] = [
-  { id: 'rally', label: 'RALLY', cost: '$1.2M · 1d', desc: 'Acto masivo en la provincia', icon: '★' },
-  { id: 'ad', label: 'AD BUY', cost: '$0.6M', desc: 'Pauta televisiva regional 48h', icon: '◐' },
-  { id: 'door', label: 'DOOR-TO-DOOR', cost: '$0.2M · 2d', desc: 'Movilización territorial', icon: '⊞' },
-  { id: 'speech', label: 'POLICY SPEECH', cost: '1d', desc: 'Anunciar propuesta sobre el issue', icon: '✎' },
-  { id: 'fund', label: 'FUNDRAISER', cost: '1d', desc: 'Cena de recaudación de alto perfil', icon: '$' },
-  { id: 'travel', label: 'TRAVEL', cost: '$0.3M · 1d', desc: 'Trasladar a la candidata', icon: '➤' },
-];
-
 /* ---- Paleta de visualización ----------------------------------------------- */
 
 const VIZ = {
@@ -142,13 +123,13 @@ const ISSUE_COLORS: Record<string, string> = {
   'Soberanía austral': VIZ.bad,
 };
 
-const REGION_COLORS: Record<string, string> = {
+const REGION_COLORS = {
   Norte: VIZ.warm,
   Centro: VIZ.cool,
   Oeste: VIZ.gold,
   Este: VIZ.violet,
   Sur: VIZ.good,
-};
+} as const;
 
 /** Interpola dos colores hex. `t` se acota a [0, 1]. */
 export function lerpColor(from: string, to: string, t: number): string {

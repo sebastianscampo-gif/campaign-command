@@ -6,7 +6,7 @@
 
 import { PROVINCES } from '@/content';
 import { useGameStore } from '@/state/gameStore';
-import { reportedPercent } from './electionData';
+import { reportedPercent } from '@/content';
 
 const CAPITAL = PROVINCES.find((p) => p.isCapital);
 

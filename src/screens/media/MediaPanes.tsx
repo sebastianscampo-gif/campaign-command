@@ -4,12 +4,13 @@
 
 import type { ReactNode } from 'react';
 import {
+  COMPOSE_DRAFT,
   INFLUENCERS,
   PODCASTS,
   PRESS_ARTICLES,
   STANCE_LABEL,
   TV_CHANNELS,
-} from './mediaData';
+} from '@/content';
 
 export function MepCard({
   title,
@@ -47,11 +48,10 @@ export function StreamPane() {
     <div className="mep-stack">
       <MepCard title="COMPOSE · ANUNCIO OFICIAL" meta="BORRADOR">
         <div className="mep-compose">
-          <span className="mep-compose__meta mono">Borrador · 22:14</span>
+          <span className="mep-compose__meta mono">{COMPOSE_DRAFT.meta}</span>
           <p className="mep-compose__text">
-            Gracias por estar con nosotros esta noche. Lo que está pasando en San Esteban no es la
-            victoria de un partido — es <em>una promesa</em> que volvió a su lugar.
-            <span className="mep-compose__token">[insertar dato CA]</span>
+            {COMPOSE_DRAFT.body}
+            <span className="mep-compose__token">{COMPOSE_DRAFT.hold}</span>
           </p>
         </div>
         <div className="mep-compose__actions">

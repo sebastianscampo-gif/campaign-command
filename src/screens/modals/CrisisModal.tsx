@@ -6,20 +6,27 @@
 
 import { useState } from 'react';
 import { ProvinceMap } from '@/components';
-import { PROVINCES } from '@/content';
+import { CRISIS_ADVISORS, PROVINCES } from '@/content';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 
-const ADVISORS = [
-  { role: 'JEFE DE GABINETE', quote: 'Hay que visitar la zona. Si no aparecés, te van a comer.', rec: '→ A' },
-  { role: 'DIR. COMUNICACIÓN', quote: 'Un anuncio de $200M nos vuelve dueños del issue "agua" tres semanas.', rec: '→ B' },
-  { role: 'JEFE DE FINANZAS', quote: 'Esos $200M no los tenemos. Bancabilidad cero.', rec: '→ C' },
-];
-
 export function CrisisModal() {
   const event = useGameStore((s) => s.activeEvent);
+  const resolveEventChoice = useGameStore((s) => s.resolveEventChoice);
+  const dismissActiveEvent = useGameStore((s) => s.dismissActiveEvent);
   const closeModal = useUiStore((s) => s.closeModal);
   const [chosen, setChosen] = useState<number | null>(null);
+
+  const handlePostpone = () => {
+    dismissActiveEvent();
+    closeModal();
+  };
+
+  const handleConfirm = () => {
+    if (chosen === null) return;
+    resolveEventChoice(chosen);
+    closeModal();
+  };
 
   if (!event) return null;
   const province = PROVINCES.find((p) => p.id === event.location);
@@ -100,24 +107,24 @@ export function CrisisModal() {
 
             <div className="crisis__advisors">
               <div className="crisis__advisors-head mono">CONSEJO DE CAMPAÑA</div>
-              {ADVISORS.map((advisor) => (
+              {CRISIS_ADVISORS.map((advisor) => (
                 <div className="crisis__advisor" key={advisor.role}>
                   <span className="crisis__advisor-role mono">{advisor.role}</span>
                   <span className="crisis__advisor-quote">“{advisor.quote}”</span>
-                  <span className="crisis__advisor-rec mono">{advisor.rec}</span>
+                  <span className="crisis__advisor-rec mono">{advisor.recommendation}</span>
                 </div>
               ))}
             </div>
 
             <div className="crisis__actions">
-              <button type="button" className="btn btn--ghost" onClick={closeModal}>
+              <button type="button" className="btn btn--ghost" onClick={handlePostpone}>
                 POSPONER 1h
               </button>
               <button
                 type="button"
                 className="btn btn--primary"
                 disabled={chosen === null}
-                onClick={closeModal}
+                onClick={handleConfirm}
               >
                 CONFIRMAR DECISIÓN
                 {chosen !== null ? ` · ${String.fromCharCode(65 + chosen)}` : ''}

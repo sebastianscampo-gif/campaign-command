@@ -5,7 +5,7 @@
    local de la pantalla.
    ============================================================================= */
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { PROVINCES } from '@/content';
 import type { ProvinceId } from '@/content';
@@ -36,20 +36,32 @@ export function MapScreen() {
     ? PROVINCES.find((p) => p.id === selected) ?? null
     : null;
 
-  const toggleLayer = (id: LayerId) =>
-    setLayers((current) => ({ ...current, [id]: !current[id] }));
+  // Handlers estables: si cambian por identidad cada render, romperían el
+  // React.memo del WarMap y el mapa entero re-renderizaría con cada hover.
+  const toggleLayer = useCallback(
+    (id: LayerId) => setLayers((current) => ({ ...current, [id]: !current[id] })),
+    [],
+  );
 
-  const handleSelect = (id: ProvinceId) =>
-    selectProvince(id === selected ? null : id);
+  const handleSelect = useCallback(
+    (id: ProvinceId) => selectProvince(id === selected ? null : id),
+    [selected, selectProvince],
+  );
+
+  const handleHover = useCallback((id: ProvinceId | null) => setHovered(id), []);
+
+  const clearHover = useCallback(() => setHovered(null), []);
 
   /** Escribe la posición del cursor como variables CSS — sin re-render. */
-  const handleMove = (event: MouseEvent<HTMLDivElement>) => {
+  const handleMove = useCallback((event: MouseEvent<HTMLDivElement>) => {
     const el = canvasRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     el.style.setProperty('--px', `${event.clientX - rect.left}px`);
     el.style.setProperty('--py', `${event.clientY - rect.top}px`);
-  };
+  }, []);
+
+  const handleCloseDossier = useCallback(() => selectProvince(null), [selectProvince]);
 
   return (
     <div className="mapview">
@@ -68,7 +80,7 @@ export function MapScreen() {
           className="mapcanvas__svgwrap"
           ref={canvasRef}
           onMouseMove={handleMove}
-          onMouseLeave={() => setHovered(null)}
+          onMouseLeave={clearHover}
         >
           <WarMap
             overlay={overlay}
@@ -76,7 +88,7 @@ export function MapScreen() {
             layers={layers}
             selected={selected}
             onSelect={handleSelect}
-            onHover={setHovered}
+            onHover={handleHover}
           />
           <MapCrosshair targetRef={canvasRef} />
           <MapHud overlay={overlay} layers={layers} />
@@ -87,7 +99,7 @@ export function MapScreen() {
 
       <aside className="mapview__right">
         {selectedGeo ? (
-          <ProvinceDossier geo={selectedGeo} onClose={() => selectProvince(null)} />
+          <ProvinceDossier geo={selectedGeo} onClose={handleCloseDossier} />
         ) : (
           <NationalOverview />
         )}

@@ -5,9 +5,17 @@
    sendero de campaña) es CSS: el mapa no re-renderiza por frame.
    ============================================================================= */
 
-import { PROVINCES } from '@/content';
+import { memo, useMemo } from 'react';
+import {
+  CITIES,
+  MEDIA_HUBS,
+  PROVINCES,
+  RALLIES,
+  TOUR_PROVINCES,
+} from '@/content';
 import type { ProvinceId } from '@/content';
 import { useGameStore } from '@/state/gameStore';
+import { nationalTension } from '@/sim';
 import { provinceColor } from './mapConfig';
 import type { LayerState, OverlayId } from './mapConfig';
 
@@ -20,31 +28,8 @@ interface WarMapProps {
   onHover: (id: ProvinceId | null) => void;
 }
 
-const CITIES = [
-  { x: 285, y: 150, name: 'PUERTO MIRAGE', pop: '0.6M' },
-  { x: 500, y: 150, name: 'ALTO VERDE', pop: '0.9M' },
-  { x: 730, y: 160, name: 'BAHÍA REAL', pop: '1.4M' },
-  { x: 275, y: 295, name: 'SAN TARCISIO', pop: '0.5M' },
-  { x: 730, y: 360, name: 'LITORAL SUR', pop: '0.8M' },
-  { x: 285, y: 540, name: 'VEGA AZUL', pop: '0.4M' },
-  { x: 725, y: 540, name: 'SANTA CRUZ', pop: '0.9M' },
-  { x: 390, y: 665, name: 'TIERRA NEGRA', pop: '0.3M' },
-];
-
-const RALLIES = [
-  { x: 730, y: 160, label: 'BAHÍA REAL', when: 'HOY · 20h', big: true },
-  { x: 285, y: 150, label: 'PUERTO MIRAGE', when: 'AYER · 19h', big: false },
-  { x: 500, y: 295, label: 'CIUDAD AURORA', when: 'D-2', big: false },
-];
-
-const MEDIA_HUBS = [
-  { x: 500, y: 295 },
-  { x: 730, y: 160 },
-  { x: 725, y: 540 },
-];
-
-const TOUR_IDS: readonly ProvinceId[] = ['VC', 'CA', 'VC', 'SA', 'VC', 'LO', 'VC'];
-const TOUR_POINTS = TOUR_IDS.map((id) => {
+/** Path SVG del tour de campaña, construido en módulo (estable, no re-render). */
+const TOUR_POINTS = TOUR_PROVINCES.map((id) => {
   const geo = PROVINCES.find((p) => p.id === id);
   return geo ? geo.labelAt : ([500, 360] as const);
 });
@@ -52,12 +37,34 @@ const TOUR_D = TOUR_POINTS.map((pt, i) => `${i === 0 ? 'M' : 'L'}${pt[0]} ${pt[1
 
 const CAPITAL = PROVINCES.find((p) => p.isCapital);
 
-export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: WarMapProps) {
+function WarMapInner({ overlay, zoom, layers, selected, onSelect, onHover }: WarMapProps) {
+  // Suscripción de grano fino — solo re-renderiza cuando cambia `provinces`,
+  // no cuando se cambia de día por otra razón, ni cuando hace hover.
   const provinces = useGameStore((s) => s.provinces);
-  const tension =
-    Object.values(provinces).reduce((sum, p) => sum + p.crisis, 0) /
-    Object.values(provinces).length /
-    10;
+
+  // Tensión derivada del estado del game store. Memoizada para no recalcular
+  // sobre cada render del mapa.
+  const snapshotTension = useGameStore(nationalTension);
+  const tension = snapshotTension;
+
+  // Pre-calcular colores y swing state por provincia. Estable mientras
+  // `provinces` y `overlay` no cambien.
+  const tiles = useMemo(
+    () =>
+      PROVINCES.map((geo) => {
+        const state = provinces[geo.id];
+        const values = Object.values(state.intent).sort((a, b) => b - a);
+        const firstValue = values[0] ?? 0;
+        const secondValue = values[1] ?? 0;
+        return {
+          geo,
+          fill: provinceColor(geo, state, overlay),
+          isSwing: firstValue - secondValue < 4,
+        };
+      }),
+    [provinces, overlay],
+  );
+
   const showCities = zoom > 1.3 || layers.cities;
   const showMedia = overlay === 'media' || layers.media;
 
@@ -124,26 +131,21 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
       )}
 
       <g>
-        {PROVINCES.map((geo) => {
-          const state = provinces[geo.id];
-          const values = Object.values(state.intent).sort((a, b) => b - a);
-          const isSwing = values[0] - values[1] < 4;
-          return (
-            <g key={geo.id}>
-              <polygon
-                points={geo.polygon}
-                className="warmap__province"
-                data-selected={geo.id === selected}
-                fill={provinceColor(geo, state, overlay)}
-                onClick={() => onSelect(geo.id)}
-                onMouseEnter={() => onHover(geo.id)}
-              />
-              {isSwing && (
-                <polygon points={geo.polygon} className="warmap__swing" fill="none" />
-              )}
-            </g>
-          );
-        })}
+        {tiles.map(({ geo, fill, isSwing }) => (
+          <g key={geo.id}>
+            <polygon
+              points={geo.polygon}
+              className="warmap__province"
+              data-selected={geo.id === selected}
+              fill={fill}
+              onClick={() => onSelect(geo.id)}
+              onMouseEnter={() => onHover(geo.id)}
+            />
+            {isSwing && (
+              <polygon points={geo.polygon} className="warmap__swing" fill="none" />
+            )}
+          </g>
+        ))}
       </g>
 
       <rect width="1000" height="720" fill="url(#warmap-tension)" pointerEvents="none" />
@@ -160,17 +162,17 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
       {showMedia && (
         <g pointerEvents="none">
           {MEDIA_HUBS.map((hub, i) => (
-            <g key={`${hub.x}-${hub.y}`}>
+            <g key={`${hub[0]}-${hub[1]}`}>
               <circle
-                cx={hub.x}
-                cy={hub.y}
+                cx={hub[0]}
+                cy={hub[1]}
                 className="warmap__ripple"
                 fill="none"
                 stroke="#9C7BD9"
                 strokeWidth="1"
                 style={{ animationDelay: `${i * 1.3}s` }}
               />
-              <circle cx={hub.x} cy={hub.y} r="3" fill="#9C7BD9" />
+              <circle cx={hub[0]} cy={hub[1]} r="3" fill="#9C7BD9" />
             </g>
           ))}
         </g>
@@ -211,7 +213,7 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
       {showCities && (
         <g pointerEvents="none">
           {CITIES.map((city) => (
-            <g key={city.name} transform={`translate(${city.x} ${city.y})`}>
+            <g key={city.name} transform={`translate(${city.position[0]} ${city.position[1]})`}>
               <circle r="2.4" fill="#F4E9C8" stroke="#0A0D11" strokeWidth="0.5" />
               {zoom > 1.6 && (
                 <>
@@ -219,7 +221,7 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
                     {city.name}
                   </text>
                   <text y="-15" textAnchor="middle" className="warmap__city-pop mono">
-                    {city.pop}
+                    {city.population}
                   </text>
                 </>
               )}
@@ -241,7 +243,7 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
       {layers.rallies && (
         <g pointerEvents="none">
           {RALLIES.map((rally) => (
-            <g key={rally.label} transform={`translate(${rally.x} ${rally.y})`}>
+            <g key={rally.label} transform={`translate(${rally.position[0]} ${rally.position[1]})`}>
               <line x1="0" y1="0" x2="0" y2="14" stroke="#C9A961" strokeWidth="1" />
               <polygon points="0,-2 8,2 0,6" fill="#C9A961" />
               <circle cy="14" r="2" fill="#C9A961" />
@@ -289,3 +291,8 @@ export function WarMap({ overlay, zoom, layers, selected, onSelect, onHover }: W
     </svg>
   );
 }
+
+/** Memoizado: el WarMap solo re-renderiza cuando overlay/zoom/layers/selected o
+ *  los handlers cambian. El hover de provincia (que vive en MapScreen state)
+ *  no causa re-render mientras los callbacks sean estables (`useCallback`). */
+export const WarMap = memo(WarMapInner);

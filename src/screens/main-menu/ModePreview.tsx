@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { ProvinceMap } from '@/components';
 import { CANDIDATE, PARTIES } from '@/content';
 import type { ProvinceId } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 import type { ScreenId } from '@/state/types';
 import type { MenuItem } from './menuItems';
@@ -106,7 +107,7 @@ function PreviewContinue({ onActivate }: PreviewProps) {
   const provinces = useGameStore((s) => s.provinces);
   const polling = useGameStore((s) => s.polling);
   const candidate = useGameStore((s) => s.candidate);
-  const latest = polling[polling.length - 1];
+  const latest = assertDefined(polling[polling.length - 1], 'polling no vacío');
 
   return (
     <div className="mp">

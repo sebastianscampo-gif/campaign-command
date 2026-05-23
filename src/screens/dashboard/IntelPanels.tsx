@@ -6,7 +6,7 @@
 import { Panel } from '@/components';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
-import { STRATEGY_RECS, TRENDS, TV_COMMENTARY } from './dashData';
+import { DASHBOARD_TRENDS, STRATEGY_RECS, TV_COMMENTARY } from '@/content';
 
 /* ---- 06 · Live tickers ----------------------------------------------------- */
 
@@ -41,10 +41,10 @@ export function TickerPanel() {
         <div className="intel__head mono">
           <span className="intel__dot" data-kind="social" />
           <span>SOCIAL · TRENDING</span>
-          <span className="intel__count">{String(TRENDS.length).padStart(2, '0')}</span>
+          <span className="intel__count">{String(DASHBOARD_TRENDS.length).padStart(2, '0')}</span>
         </div>
         <div className="intel__trends">
-          {TRENDS.map((trend) => (
+          {DASHBOARD_TRENDS.map((trend) => (
             <div className="intel__trend mono" key={trend.tag}>
               <span className="intel__trend-rank">{trend.rank}</span>
               <span className="intel__trend-tag">{trend.tag}</span>

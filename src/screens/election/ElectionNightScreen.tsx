@@ -7,18 +7,23 @@
 
 import type { ReactNode } from 'react';
 import { Sparkline } from '@/components';
-import { PARTIES, PROVINCES } from '@/content';
+import {
+  ANCHORS,
+  BREAKING_HEADLINES,
+  ELECTION_RESULTS,
+  ELECTION_LOWER_STATS,
+  PARTIES,
+  PROVINCES,
+  REPORTING_PCT,
+  SWING_CURVE,
+  SHOW_TIME,
+  TURNOUT_REPORT,
+  reportedPercent,
+} from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import { BigElectionMap } from './BigElectionMap';
-import {
-  ANCHORS,
-  BREAKING,
-  ELECTION_RESULTS,
-  REPORTING,
-  SWING_CURVE,
-  reportedPercent,
-} from './electionData';
 
 const CONFETTI = Array.from({ length: 44 }, (_, i) => ({
   x: (i * 37 + 11) % 100,
@@ -55,8 +60,8 @@ export function ElectionNightScreen() {
   const provinces = useGameStore((s) => s.provinces);
   const navigate = useUiStore((s) => s.navigate);
 
-  const leader = ELECTION_RESULTS[0];
-  const runnerUp = ELECTION_RESULTS[1];
+  const leader = assertDefined(ELECTION_RESULTS[0], 'ELECTION_RESULTS sembrada con 5 entradas');
+  const runnerUp = assertDefined(ELECTION_RESULTS[1], 'ELECTION_RESULTS sembrada con 5 entradas');
   const margin = leader.pct - runnerUp.pct;
   const swingStates = PROVINCES.filter((p) => Math.abs(provinces[p.id].leaning) < 0.2).slice(0, 4);
 
@@ -75,8 +80,8 @@ export function ElectionNightScreen() {
           <span>NOCHE ELECTORAL · 14·OCT·2026</span>
         </div>
         <div className="enight__top-right mono">
-          <span>HORA · 22:47</span>
-          <span>MESAS · {REPORTING}% ESCRUTADAS</span>
+          <span>HORA · {SHOW_TIME}</span>
+          <span>MESAS · {REPORTING_PCT}% ESCRUTADAS</span>
           <button type="button" className="enight__exit" onClick={() => navigate('menu')}>
             ← MENU
           </button>
@@ -124,7 +129,7 @@ export function ElectionNightScreen() {
       <main className="enight__center">
         <div className="enight__bigmap">
           <BigElectionMap />
-          <div className="enight__bigmap-tag mono">MAPA NACIONAL · ESCRUTINIO {REPORTING}%</div>
+          <div className="enight__bigmap-tag mono">MAPA NACIONAL · ESCRUTINIO {REPORTING_PCT}%</div>
           <div className="enight__bigmap-legend mono">
             <span>
               <i style={{ background: PARTIES.PRD.color }} />
@@ -147,7 +152,7 @@ export function ElectionNightScreen() {
       </main>
 
       <aside className="enight__right">
-        <EPanel title="PROYECCIÓN · NACIONAL" meta={`${REPORTING}%`} flush>
+        <EPanel title="PROYECCIÓN · NACIONAL" meta={`${REPORTING_PCT}%`} flush>
           {ELECTION_RESULTS.map((result, i) => (
             <div className="enight__result" key={result.party}>
               <div className="enight__result-row">
@@ -208,47 +213,43 @@ export function ElectionNightScreen() {
           </div>
         </EPanel>
 
-        <EPanel title="TURNOUT EST." meta="67.4%">
+        <EPanel title="TURNOUT EST." meta={`${TURNOUT_REPORT.current}%`}>
           <div className="enight__turnout-head mono">
             <span>2022 · 64.1%</span>
-            <span>HOY · 67.4%</span>
+            <span>HOY · {TURNOUT_REPORT.current}%</span>
           </div>
           <div className="enight__turnout-track">
-            <div className="enight__turnout-fill" style={{ width: '67.4%' }} />
+            <div className="enight__turnout-fill" style={{ width: `${TURNOUT_REPORT.current}%` }} />
             <span className="enight__turnout-mark" style={{ left: '64.1%' }} />
           </div>
           <div className="enight__turnout-rows mono">
-            <div>
-              <span>JÓVENES 18-29</span>
-              <span className="enight-pos">+8.1pt</span>
-            </div>
-            <div>
-              <span>RURAL</span>
-              <span className="enight-neg">−2.4pt</span>
-            </div>
-            <div>
-              <span>METRO AURORA</span>
-              <span className="enight-pos">+5.6pt</span>
-            </div>
+            {TURNOUT_REPORT.segments.map((seg) => (
+              <div key={seg.label}>
+                <span>{seg.label}</span>
+                <span className={seg.tone === 'pos' ? 'enight-pos' : 'enight-neg'}>{seg.delta}</span>
+              </div>
+            ))}
           </div>
         </EPanel>
       </aside>
 
       <div className="enight__lower">
         <div className="enight__lower-col">
-          <div className="enight__lower-label mono">VENTAJA · 1° vs 2°</div>
+          <div className="enight__lower-label mono">{ELECTION_LOWER_STATS.margin.label}</div>
           <div className="enight__lower-val enight__lower-val--gold">+{margin.toFixed(2)}</div>
-          <div className="enight__lower-sub mono">pts nacional · {REPORTING}% mesas</div>
+          <div className="enight__lower-sub mono">
+            {ELECTION_LOWER_STATS.margin.sub} · {REPORTING_PCT}% mesas
+          </div>
         </div>
         <div className="enight__lower-col">
-          <div className="enight__lower-label mono">TURNOUT</div>
-          <div className="enight__lower-val">67.4%</div>
-          <div className="enight__lower-sub mono">vs 64.1% (2022) · +3.3</div>
+          <div className="enight__lower-label mono">{ELECTION_LOWER_STATS.turnout.label}</div>
+          <div className="enight__lower-val">{ELECTION_LOWER_STATS.turnout.value}</div>
+          <div className="enight__lower-sub mono">{ELECTION_LOWER_STATS.turnout.sub}</div>
         </div>
         <div className="enight__lower-col">
-          <div className="enight__lower-label mono">CONFIANZA · MODELO</div>
-          <div className="enight__lower-val enight__lower-val--pos">92%</div>
-          <div className="enight__lower-sub mono">PROYECCIÓN · GANADOR PRD</div>
+          <div className="enight__lower-label mono">{ELECTION_LOWER_STATS.confidence.label}</div>
+          <div className="enight__lower-val enight__lower-val--pos">{ELECTION_LOWER_STATS.confidence.value}</div>
+          <div className="enight__lower-sub mono">{ELECTION_LOWER_STATS.confidence.sub}</div>
         </div>
       </div>
 
@@ -256,7 +257,7 @@ export function ElectionNightScreen() {
         <div className="enight__ticker-label mono">● BREAKING</div>
         <div className="enight__ticker-track">
           <div className="enight__ticker-inner mono">
-            {[...BREAKING, ...BREAKING].map((line, i) => (
+            {[...BREAKING_HEADLINES, ...BREAKING_HEADLINES].map((line, i) => (
               <span className="enight__ticker-item" key={i}>
                 ◆ {line}
               </span>

@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { COUNTRY } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
 import { MENU_ITEMS } from './menuItems';
@@ -23,17 +24,22 @@ export function MainMenuScreen() {
 
   const [activeId, setActiveId] = useState<MenuItemId>('continue');
   const activeIndex = MENU_ITEMS.findIndex((item) => item.id === activeId);
-  const activeItem = MENU_ITEMS[activeIndex];
+  const activeItem = assertDefined(MENU_ITEMS[activeIndex], 'activeId siempre existe en MENU_ITEMS');
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
         event.preventDefault();
-        setActiveId(MENU_ITEMS[(activeIndex + 1) % MENU_ITEMS.length].id);
+        const next = assertDefined(
+          MENU_ITEMS[(activeIndex + 1) % MENU_ITEMS.length],
+          'módulo dentro de rango',
+        );
+        setActiveId(next.id);
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
-        const prev = (activeIndex - 1 + MENU_ITEMS.length) % MENU_ITEMS.length;
-        setActiveId(MENU_ITEMS[prev].id);
+        const prevIdx = (activeIndex - 1 + MENU_ITEMS.length) % MENU_ITEMS.length;
+        const prev = assertDefined(MENU_ITEMS[prevIdx], 'módulo dentro de rango');
+        setActiveId(prev.id);
       } else if (event.key === 'Enter' && activeItem.action) {
         navigate(activeItem.action);
       }

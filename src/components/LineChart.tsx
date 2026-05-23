@@ -39,7 +39,7 @@ export function LineChart({
   const innerW = width - padX * 2;
   const innerH = height - padY * 2;
 
-  const allValues = data.flatMap((d) => series.map((s) => d.values[s.key]));
+  const allValues = data.flatMap((d) => series.map((s) => d.values[s.key] ?? 0));
   const max = Math.ceil(Math.max(...allValues) / 5) * 5 + 5;
 
   const xAt = (i: number): number =>
@@ -91,7 +91,7 @@ export function LineChart({
 
       {series.map((s) => {
         const pts = data.map(
-          (d, i) => [xAt(i), yAt(d.values[s.key])] as const,
+          (d, i) => [xAt(i), yAt(d.values[s.key] ?? 0)] as const,
         );
         const path = pts
           .map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`)
@@ -111,14 +111,16 @@ export function LineChart({
                 strokeWidth={1.4}
               />
             ))}
-            <text
-              x={last[0] + 6}
-              y={last[1] + 3}
-              fill={s.color}
-              className="linechart__series-label mono"
-            >
-              {s.label}
-            </text>
+            {last && (
+              <text
+                x={last[0] + 6}
+                y={last[1] + 3}
+                fill={s.color}
+                className="linechart__series-label mono"
+              >
+                {s.label}
+              </text>
+            )}
           </g>
         );
       })}

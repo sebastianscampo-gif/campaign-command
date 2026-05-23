@@ -4,7 +4,13 @@
    ============================================================================= */
 
 import { Panel, SectionHead, StatTile } from '@/components';
-import { COUNTRY, PROVINCES } from '@/content';
+import {
+  ACTIVE_ALERTS,
+  COUNTRY,
+  ELECTORATE_MILLIONS,
+  ELECTORATE_RATIO,
+  PROVINCES,
+} from '@/content';
 import type { PartyId } from '@/content';
 import { useGameStore } from '@/state/gameStore';
 import { VoteBar } from './VoteBar';
@@ -27,8 +33,11 @@ export function NationalOverview() {
     .sort((a, b) => b[1] - a[1]);
 
   const hot = PROVINCES.map((geo) => {
-    const values = Object.values(provinces[geo.id].intent).sort((a, b) => b - a);
-    return { geo, gap: values[0] - values[1] };
+    const state = provinces[geo.id];
+    const values = state ? Object.values(state.intent).sort((a, b) => b - a) : [];
+    const top1 = values[0] ?? 0;
+    const top2 = values[1] ?? 0;
+    return { geo, gap: top1 - top2 };
   })
     .sort((a, b) => a.gap - b.gap)
     .slice(0, 4);
@@ -38,7 +47,11 @@ export function NationalOverview() {
       <div className="natov">
         <div className="natov__grid">
           <StatTile label="POBLACIÓN" value={`${COUNTRY.population}M`} />
-          <StatTile label="ELECT. HÁBIL" value="19.4M" sub="72% padrón" />
+          <StatTile
+            label="ELECT. HÁBIL"
+            value={`${ELECTORATE_MILLIONS}M`}
+            sub={`${(ELECTORATE_RATIO * 100).toFixed(0)}% padrón`}
+          />
           <StatTile label="GDP TOTAL" value={`$${COUNTRY.gdp}bn`} sub="PSE" />
           <StatTile label="CICLO" value={`${day}/${totalDays}`} sub="día" />
         </div>
@@ -66,21 +79,13 @@ export function NationalOverview() {
 
         <SectionHead index="03" title="Alertas activas" />
         <div className="natov__alerts">
-          <div className="alertrow" data-level="high">
-            <span className="alertrow__lvl mono">L3</span>
-            <span className="alertrow__text">Corte de ruta · Llanos Occidentales</span>
-            <span className="mono">03:47</span>
-          </div>
-          <div className="alertrow" data-level="mid">
-            <span className="alertrow__lvl mono">L2</span>
-            <span className="alertrow__text">Debate nacional confirmado · 3d</span>
-            <span className="mono">—</span>
-          </div>
-          <div className="alertrow" data-level="low">
-            <span className="alertrow__lvl mono">L1</span>
-            <span className="alertrow__text">MNP convocará frente antiprogresista</span>
-            <span className="mono">12h</span>
-          </div>
+          {ACTIVE_ALERTS.map((alert) => (
+            <div className="alertrow" data-level={alert.level} key={alert.text}>
+              <span className="alertrow__lvl mono">{alert.tag}</span>
+              <span className="alertrow__text">{alert.text}</span>
+              <span className="mono">{alert.timer}</span>
+            </div>
+          ))}
         </div>
       </div>
     </Panel>

@@ -5,32 +5,15 @@
    ============================================================================= */
 
 import { SectionHead } from '@/components';
-import { CANDIDATE } from '@/content';
+import {
+  CANDIDATE,
+  CANDIDATE_DOSSIER_ROLE,
+  CANDIDATE_IMAGE_LABELS,
+  DEMOGRAPHIC_LABELS,
+  IDEOLOGY_AXIS_LABELS,
+} from '@/content';
 import { useGameStore } from '@/state/gameStore';
 import { useUiStore } from '@/state/uiStore';
-
-const AXIS_LABELS: Record<string, [string, string]> = {
-  economic: ['ESTATISMO', 'MERCADO'],
-  social: ['PROGRESISTA', 'CONSERVADOR'],
-  authority: ['LIBERTARIO', 'AUTORITARIO'],
-};
-
-const IMAGE_LABELS: Record<string, string> = {
-  charisma: 'CARISMA',
-  competence: 'COMPETENCIA',
-  integrity: 'INTEGRIDAD',
-  decisiveness: 'DECISIÓN',
-};
-
-const APPROVAL_LABELS: Record<string, string> = {
-  national: 'NACIONAL',
-  men: 'HOMBRES',
-  women: 'MUJERES',
-  youth: 'JÓVENES',
-  elders: 'MAYORES',
-  urban: 'URBANO',
-  rural: 'RURAL',
-};
 
 export function CandidateModal() {
   const candidate = useGameStore((s) => s.candidate);
@@ -73,7 +56,7 @@ export function CandidateModal() {
               </svg>
             </div>
             <div className="dm__name">{CANDIDATE.name}</div>
-            <div className="dm__role mono">CANDIDATA PRESIDENCIAL · PRD · 2026</div>
+            <div className="dm__role mono">{CANDIDATE_DOSSIER_ROLE}</div>
             <p className="dm__bio">{CANDIDATE.background}</p>
 
             <SectionHead index="01" title="Rasgos" />
@@ -88,7 +71,7 @@ export function CandidateModal() {
             <SectionHead index="02" title="Ideología" />
             <div className="dm__ideo">
               {(Object.entries(CANDIDATE.ideology) as [string, number][]).map(([axis, value]) => {
-                const [left, right] = AXIS_LABELS[axis] ?? [axis, axis];
+                const [left, right] = IDEOLOGY_AXIS_LABELS[axis] ?? [axis, axis];
                 return (
                   <div className="dm__ideo-row" key={axis}>
                     <span className="dm__ideo-label mono">{left}</span>
@@ -111,7 +94,7 @@ export function CandidateModal() {
             <div className="dm__image">
               {(Object.entries(candidate.image) as [string, number][]).map(([key, value]) => (
                 <div className="dm__imgrow" key={key}>
-                  <span className="dm__imgrow-label mono">{IMAGE_LABELS[key] ?? key}</span>
+                  <span className="dm__imgrow-label mono">{CANDIDATE_IMAGE_LABELS[key] ?? key}</span>
                   <div className="dm__imgrow-bar">
                     <div className="dm__imgrow-fill" style={{ width: `${value}%` }} />
                   </div>
@@ -124,7 +107,7 @@ export function CandidateModal() {
             <div className="dm__appgrid">
               {(Object.entries(candidate.approval) as [string, number][]).map(([key, value]) => (
                 <div className="dm__appcell" key={key}>
-                  <div className="dm__appcell-label mono">{APPROVAL_LABELS[key] ?? key}</div>
+                  <div className="dm__appcell-label mono">{DEMOGRAPHIC_LABELS[key] ?? key}</div>
                   <div
                     className="dm__appcell-val mono"
                     data-band={value > 50 ? 'good' : value > 40 ? 'ok' : 'bad'}

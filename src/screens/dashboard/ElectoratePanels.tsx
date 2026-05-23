@@ -4,8 +4,8 @@
    ============================================================================= */
 
 import { Panel } from '@/components';
-import { PARTIES } from '@/content';
-import type { PartyId } from '@/content';
+import { COALITION_ROLES, PARTIES } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 
 /* ---- 03 · Issue salience --------------------------------------------------- */
@@ -49,30 +49,16 @@ export function IssuesPanel() {
 
 /* ---- 05 · Coalition strength ----------------------------------------------- */
 
-interface CoalitionNode {
-  party: PartyId;
-  role: string;
-  hint?: string;
-  kind: 'you' | 'ally' | 'neutral' | 'opp';
-}
-
-const COALITION: readonly CoalitionNode[] = [
-  { party: 'PRD', role: 'TU BLOQUE', kind: 'you' },
-  { party: 'FAS', role: 'ALIADO', hint: 'Mamani · apoyo condicional', kind: 'ally' },
-  { party: 'VC', role: 'NEUTRAL', hint: 'Tagliaferri · en silencio', kind: 'neutral' },
-  { party: 'IND', role: 'DISPERSO', kind: 'neutral' },
-  { party: 'MNP', role: 'OPOSICIÓN', kind: 'opp' },
-];
-
 export function CoalitionPanel() {
   const polling = useGameStore((s) => s.polling);
-  const intent = polling[polling.length - 1].intent;
+  const latest = assertDefined(polling[polling.length - 1], 'polling no vacío');
+  const intent = latest.intent;
   const ownBloc = intent.PRD + intent.FAS;
 
   return (
     <Panel label="05" caption="Coalition strength" className="span-4">
       <div className="coalition">
-        {COALITION.map((node) => (
+        {COALITION_ROLES.map((node) => (
           <div className="coalnode" data-kind={node.kind} key={node.party}>
             <div className="coalnode__head mono">
               <span className="coalnode__party">{PARTIES[node.party].short}</span>

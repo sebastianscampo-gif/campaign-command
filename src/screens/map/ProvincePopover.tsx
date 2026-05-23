@@ -7,6 +7,7 @@
 import { Sparkline } from '@/components';
 import { PARTIES, PROVINCES } from '@/content';
 import type { PartyId, ProvinceId } from '@/content';
+import { assertDefined } from '@/lib/invariant';
 import { useGameStore } from '@/state/gameStore';
 
 interface ProvincePopoverProps {
@@ -16,14 +17,16 @@ interface ProvincePopoverProps {
 export function ProvincePopover({ id }: ProvincePopoverProps) {
   const geo = PROVINCES.find((p) => p.id === id);
   const state = useGameStore((s) => s.provinces[id]);
-  if (!geo) return null;
+  if (!geo || !state) return null;
 
   const sorted = (Object.entries(state.intent) as [PartyId, number][]).sort(
     (a, b) => b[1] - a[1],
   );
   const top = sorted.slice(0, 3);
-  const [leadParty, leadPct] = sorted[0];
-  const gap = sorted[0][1] - sorted[1][1];
+  const first = assertDefined(sorted[0], 'intent tiene partidos');
+  const second = assertDefined(sorted[1], 'intent tiene al menos 2 partidos');
+  const [leadParty, leadPct] = first;
+  const gap = first[1] - second[1];
   const swing = gap < 4;
 
   const seed = geo.id.charCodeAt(0) * 0.5;

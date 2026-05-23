@@ -1,24 +1,37 @@
 /* =============================================================================
-   MEDIA ECOSYSTEM — Datos
-   Superficies sociales/prensa/podcast genéricas. No imitan ninguna plataforma
-   real: los streams se llaman PULSE / FRAME / WAVE.
+   CONTENT — Ecosistema mediático
+   Posts del feed, tendencias, podcasts, prensa escrita, influencers y clips
+   cortos. Contenido editorial — sirve como datos seed hasta que exista un
+   simulador de medios.
    ============================================================================= */
 
 export type MediaTab = 'stream' | 'press' | 'podcasts' | 'live';
 
+export type Stance = 'friendly' | 'neutral' | 'hostile';
+
+export type PressTone = 'pos' | 'neg' | 'warn';
+
+export const STANCE_LABEL: Record<Stance, string> = {
+  friendly: 'ALIADO',
+  neutral: 'NEUTRAL',
+  hostile: 'HOSTIL',
+};
+
+/* ---- Feed PULSE ------------------------------------------------------------ */
+
 export interface MediaPost {
-  user: string;
-  handle: string;
-  color: string;
-  time: string;
-  text: string;
-  repost: string;
-  react: string;
-  views: string;
-  verified?: boolean;
+  readonly user: string;
+  readonly handle: string;
+  readonly color: string;
+  readonly time: string;
+  readonly text: string;
+  readonly repost: string;
+  readonly react: string;
+  readonly views: string;
+  readonly verified?: boolean;
 }
 
-export const POSTS: readonly MediaPost[] = [
+export const MEDIA_POSTS: readonly MediaPost[] = [
   {
     user: 'Aurora Network',
     handle: '@aurora_news',
@@ -83,13 +96,15 @@ export const POSTS: readonly MediaPost[] = [
   },
 ];
 
+/* ---- Tendencias ------------------------------------------------------------ */
+
 export interface MediaTrend {
-  tag: string;
-  volume: string;
-  spark: readonly number[];
+  readonly tag: string;
+  readonly volume: string;
+  readonly spark: readonly number[];
 }
 
-export const TRENDS: readonly MediaTrend[] = [
+export const MEDIA_TRENDS: readonly MediaTrend[] = [
   { tag: '#Vasconcelos2026', volume: '214k', spark: [6, 8, 10, 14, 18, 22, 26, 30, 32, 36, 38, 42] },
   { tag: '#DebateNacional', volume: '98k', spark: [24, 20, 28, 30, 28, 26, 24, 22, 18, 16, 14, 12] },
   { tag: '#Orellana', volume: '72k', spark: [12, 14, 18, 22, 18, 16, 18, 20, 18, 16, 14, 18] },
@@ -98,14 +113,14 @@ export const TRENDS: readonly MediaTrend[] = [
   { tag: '#SequíaLlanos', volume: '18k', spark: [10, 12, 14, 12, 10, 14, 18, 22, 24, 20, 18, 16] },
 ];
 
-export type Stance = 'friendly' | 'neutral' | 'hostile';
+/* ---- Podcasts -------------------------------------------------------------- */
 
 export interface Podcast {
-  title: string;
-  sub: string;
-  stance: Stance;
-  episode: string;
-  audience: string;
+  readonly title: string;
+  readonly sub: string;
+  readonly stance: Stance;
+  readonly episode: string;
+  readonly audience: string;
 }
 
 export const PODCASTS: readonly Podcast[] = [
@@ -117,13 +132,13 @@ export const PODCASTS: readonly Podcast[] = [
   { title: 'Plaza Pública', sub: 'Calle · Voz ciudadana', stance: 'hostile', episode: 'EP 220 · 38m', audience: '68k' },
 ];
 
-export type PressTone = 'pos' | 'neg' | 'warn';
+/* ---- Press releases (right rail) ------------------------------------------ */
 
 export interface PressRelease {
-  src: string;
-  headline: string;
-  tone: PressTone;
-  time: string;
+  readonly src: string;
+  readonly headline: string;
+  readonly tone: PressTone;
+  readonly time: string;
 }
 
 export const PRESS_RELEASES: readonly PressRelease[] = [
@@ -133,12 +148,14 @@ export const PRESS_RELEASES: readonly PressRelease[] = [
   { src: 'DIARIO DEL PUERTO', headline: 'Bahía Real bate récord histórico de asistencia', tone: 'pos', time: '10:32' },
 ];
 
+/* ---- Press articles (página completa) ------------------------------------- */
+
 export interface PressArticle {
-  src: string;
-  date: string;
-  headline: string;
-  summary: string;
-  tone: PressTone;
+  readonly src: string;
+  readonly date: string;
+  readonly headline: string;
+  readonly summary: string;
+  readonly tone: PressTone;
 }
 
 export const PRESS_ARTICLES: readonly PressArticle[] = [
@@ -166,10 +183,12 @@ export const PRESS_ARTICLES: readonly PressArticle[] = [
   },
 ];
 
+/* ---- Influencers ----------------------------------------------------------- */
+
 export interface Influencer {
-  handle: string;
-  reach: string;
-  stance: Stance;
+  readonly handle: string;
+  readonly reach: string;
+  readonly stance: Stance;
 }
 
 export const INFLUENCERS: readonly Influencer[] = [
@@ -180,13 +199,15 @@ export const INFLUENCERS: readonly Influencer[] = [
   { handle: '@votojoven', reach: '380k', stance: 'friendly' },
 ];
 
+/* ---- Frames (clips cortos) ------------------------------------------------- */
+
 export interface MediaFrame {
-  handle: string;
-  views: string;
-  text: string;
+  readonly handle: string;
+  readonly views: string;
+  readonly text: string;
 }
 
-export const FRAMES: readonly MediaFrame[] = [
+export const MEDIA_FRAMES: readonly MediaFrame[] = [
   { handle: '@auroranews', views: '214k', text: 'Highlights del debate' },
   { handle: '@voto_joven', views: '88k', text: 'POV: votando con 19' },
   { handle: '@calle_ahora', views: '62k', text: 'Llegada a Plaza Mayor' },
@@ -197,6 +218,8 @@ export const FRAMES: readonly MediaFrame[] = [
   { handle: '@check_politico', views: '22k', text: 'Fact-check · datos PRD' },
 ];
 
+/* ---- Live TV --------------------------------------------------------------- */
+
 export const TV_CHANNELS: readonly string[] = [
   'CHANNEL 04 · AURORA NETWORK',
   'CHANNEL 11 · PRENSA NACIONAL',
@@ -204,8 +227,9 @@ export const TV_CHANNELS: readonly string[] = [
   'TV PÚBLICA',
 ];
 
-export const STANCE_LABEL: Record<Stance, string> = {
-  friendly: 'ALIADO',
-  neutral: 'NEUTRAL',
-  hostile: 'HOSTIL',
-};
+/** Borrador de "anuncio oficial" que el jugador estaría redactando. */
+export const COMPOSE_DRAFT = {
+  meta: 'Borrador · 22:14',
+  body: 'Gracias por estar con nosotros esta noche. Lo que está pasando en San Esteban no es la victoria de un partido — es una promesa que volvió a su lugar.',
+  hold: '[insertar dato CA]',
+} as const;
