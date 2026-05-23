@@ -26,9 +26,12 @@ export type ScreenId =
   | 'gov'
   | 'party'
   | 'profile'
-  | 'styleguide';
+  | 'styleguide'
+  | 'career-setup'
+  | 'career-overview'
+  | 'career-legacy';
 
-export type ModalId = 'crisis' | 'candidate';
+export type ModalId = 'crisis' | 'candidate' | 'career-event';
 
 export type PaletteId = 'warroom' | 'cinematic' | 'brutalist' | 'ember';
 

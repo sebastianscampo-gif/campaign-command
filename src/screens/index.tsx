@@ -12,6 +12,11 @@ import { ElectionNightScreen } from './election';
 import { MediaScreen } from './media';
 import { PlaceholderScreen } from './PlaceholderScreen';
 import { StyleGuideScreen } from './StyleGuideScreen';
+import {
+  CareerOverviewScreen,
+  CareerSetupScreen,
+  LegacySummaryScreen,
+} from './career';
 
 interface ScreenRouterProps {
   screen: ScreenId;
@@ -55,5 +60,11 @@ export function ScreenRouter({ screen }: ScreenRouterProps) {
       );
     case 'styleguide':
       return <StyleGuideScreen />;
+    case 'career-setup':
+      return <CareerSetupScreen />;
+    case 'career-overview':
+      return <CareerOverviewScreen />;
+    case 'career-legacy':
+      return <LegacySummaryScreen />;
   }
 }

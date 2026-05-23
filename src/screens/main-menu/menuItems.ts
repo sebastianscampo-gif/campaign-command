@@ -37,8 +37,8 @@ export const MENU_ITEMS: readonly MenuItem[] = [
   {
     id: 'career',
     label: 'CAREER MODE',
-    sub: 'Carrera política multi-ciclo · 1992 → 2046',
-    action: 'map',
+    sub: 'Carrera política multi-ciclo · creá tu político',
+    action: 'career-setup',
   },
   { id: 'party', label: 'PARTY MODE', sub: 'Convención · maquinaria electoral', action: 'map' },
   {

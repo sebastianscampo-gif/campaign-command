@@ -18,6 +18,9 @@ const FULLSCREEN: ReadonlySet<ScreenId> = new Set<ScreenId>([
   'menu',
   'election',
   'media',
+  'career-setup',
+  'career-overview',
+  'career-legacy',
 ]);
 
 export function App() {
