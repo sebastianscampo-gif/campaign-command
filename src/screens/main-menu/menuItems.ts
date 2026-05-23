@@ -40,7 +40,12 @@ export const MENU_ITEMS: readonly MenuItem[] = [
     sub: 'Carrera política multi-ciclo · creá tu político',
     action: 'career-setup',
   },
-  { id: 'party', label: 'PARTY MODE', sub: 'Convención · maquinaria electoral', action: 'map' },
+  {
+    id: 'party',
+    label: 'PARTY MODE',
+    sub: 'Fundá un partido · 3 elecciones encadenadas',
+    action: 'party-setup',
+  },
   {
     id: 'scenarios',
     label: 'HISTORICAL SCENARIOS',

@@ -17,6 +17,11 @@ import {
   CareerSetupScreen,
   LegacySummaryScreen,
 } from './career';
+import {
+  PartyLegacySummaryScreen,
+  PartyOverviewScreen,
+  PartySetupScreen,
+} from './party';
 
 interface ScreenRouterProps {
   screen: ScreenId;
@@ -43,13 +48,7 @@ export function ScreenRouter({ screen }: ScreenRouterProps) {
         />
       );
     case 'party':
-      return (
-        <PlaceholderScreen
-          eyebrow="PARTY · MODE"
-          title="Modo partido"
-          lede="Hub de partido: candidatos provinciales, listas legislativas y finanzas."
-        />
-      );
+      return <PartySetupScreen />;
     case 'profile':
       return (
         <PlaceholderScreen
@@ -66,5 +65,11 @@ export function ScreenRouter({ screen }: ScreenRouterProps) {
       return <CareerOverviewScreen />;
     case 'career-legacy':
       return <LegacySummaryScreen />;
+    case 'party-setup':
+      return <PartySetupScreen />;
+    case 'party-overview':
+      return <PartyOverviewScreen />;
+    case 'party-legacy':
+      return <PartyLegacySummaryScreen />;
   }
 }

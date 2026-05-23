@@ -83,7 +83,10 @@ button {
 .app[data-screen='media'],
 .app[data-screen='career-setup'],
 .app[data-screen='career-overview'],
-.app[data-screen='career-legacy'] {
+.app[data-screen='career-legacy'],
+.app[data-screen='party-setup'],
+.app[data-screen='party-overview'],
+.app[data-screen='party-legacy'] {
   grid-template-rows: 1fr;
 }
 

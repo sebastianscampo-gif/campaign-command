@@ -29,9 +29,12 @@ export type ScreenId =
   | 'styleguide'
   | 'career-setup'
   | 'career-overview'
-  | 'career-legacy';
+  | 'career-legacy'
+  | 'party-setup'
+  | 'party-overview'
+  | 'party-legacy';
 
-export type ModalId = 'crisis' | 'candidate' | 'career-event';
+export type ModalId = 'crisis' | 'candidate' | 'career-event' | 'party-event';
 
 export type PaletteId = 'warroom' | 'cinematic' | 'brutalist' | 'ember';
 
