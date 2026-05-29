@@ -286,7 +286,28 @@ export function PartyOverviewScreen() {
           )}
         </Panel>
 
-        <Panel label="09" caption="Narrativa reciente" className="span-6">
+        <Panel label="09" caption="Coaliciones" className="span-6">
+          {state.coalitions.length === 0 ? (
+            <p className="po__empty-text">Sin pactos. El partido compite solo.</p>
+          ) : (
+            <div className="po__coalitions">
+              {state.coalitions.map((c) => (
+                <div key={c.id} className="po__coalition" data-status={c.status}>
+                  <div className="po__coalition-head">
+                    <span className="po__coalition-partner">{c.partnerName}</span>
+                    <span className="po__coalition-status mono">{c.status.toUpperCase()}</span>
+                  </div>
+                  <div className="po__coalition-meta mono">
+                    {c.type.toUpperCase()} · {c.forStage.toUpperCase()}
+                  </div>
+                  <div className="po__coalition-terms">{c.terms}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <Panel label="10" caption="Narrativa reciente" className="span-6">
           {state.recentNarratives.length === 0 ? (
             <p className="po__empty-text">El ciclo recién empieza.</p>
           ) : (
@@ -300,7 +321,7 @@ export function PartyOverviewScreen() {
 
         {isPrecampaign && (
           <Panel
-            label="10"
+            label="11"
             caption={`Acciones · ${state.actionPoints} pts restantes`}
             className="span-12"
           >
@@ -397,7 +418,7 @@ export function PartyOverviewScreen() {
         )}
 
         {isAftermath && (
-          <Panel label="10" caption="Resultado del ciclo" className="span-12 po__aftermath">
+          <Panel label="11" caption="Resultado del ciclo" className="span-12 po__aftermath">
             {(() => {
               const last = state.completedElections[state.completedElections.length - 1];
               if (!last) return null;

@@ -16,11 +16,15 @@ import {
 import { applyOutcomes } from '../effects';
 import { computeNationalShare, classifyResult, resolvePartyElection } from '../elections';
 import { applyBrandDelta, decayBrand } from '../brand';
+import { activeCoalitions, coalitionShareBonus, formCoalition } from '../coalitions';
+import { checkDonorDebts } from '../donors';
+import { eligibleEvents, recomputePendingEvents } from '../events';
+import { registerDonor } from '../finance';
 import { computeInternalDiscipline, factionsAtRuptureThreshold, patchFaction } from '../factions';
 import { addMemory, ageMemoriesOneCycle, netMemoryImpact } from '../memory';
 import { ageScandalsOneCycle, createScandal } from '../scandals';
 import type { PartySetupChoices } from '../setup';
-import type { Faction, FactionKind } from '../types';
+import type { Coalition, Faction, FactionKind } from '../types';
 
 const baseChoices: PartySetupChoices = {
   name: 'Test Party',
@@ -250,6 +254,148 @@ describe('elections', () => {
     const b = resolvePartyElection(state, scenario);
     expect(a.nationalShare).toBe(b.nationalShare);
     expect(a.result).toBe(b.result);
+  });
+
+  it('una coalición activa aporta al share de su etapa', () => {
+    const state = buildPartyState(baseChoices);
+    const legislative = PARTY_ELECTIONS.find((e) => e.stage === 'legislative')!;
+    const base = computeNationalShare(state, legislative);
+    const withCoalition = computeNationalShare(
+      {
+        ...state,
+        coalitions: formCoalition([], {
+          partnerName: 'VC',
+          partnerPartyId: 'VC',
+          type: 'legislative',
+          terms: 'x',
+          forStage: 'legislative',
+          cycle: 0,
+        }),
+      },
+      legislative,
+    );
+    expect(withCoalition).toBeGreaterThan(base);
+  });
+});
+
+/* ---- Coaliciones ---------------------------------------------------------- */
+
+describe('coalitions', () => {
+  it('formCoalition no duplica socios activos', () => {
+    let coalitions = formCoalition([], {
+      partnerName: 'VC',
+      partnerPartyId: 'VC',
+      type: 'legislative',
+      terms: 'x',
+      forStage: 'legislative',
+      cycle: 0,
+    });
+    coalitions = formCoalition(coalitions, {
+      partnerName: 'VC',
+      partnerPartyId: 'VC',
+      type: 'legislative',
+      terms: 'x',
+      forStage: 'legislative',
+      cycle: 1,
+    });
+    expect(coalitions).toHaveLength(1);
+  });
+
+  it('el outcome coalition instancia un pacto persistente', () => {
+    const state = buildPartyState(baseChoices);
+    const next = applyOutcomes(state, [
+      {
+        kind: 'coalition',
+        partnerName: 'FAS',
+        partnerPartyId: 'FAS',
+        coalitionType: 'electoral',
+        terms: 'candidatura conjunta',
+        forStage: 'national',
+      },
+    ]);
+    expect(activeCoalitions(next.coalitions)).toHaveLength(1);
+    expect(next.coalitions[0]!.partnerPartyId).toBe('FAS');
+  });
+
+  it('coalitionShareBonus solo cuenta las aplicables a la etapa', () => {
+    const coalitions: Coalition[] = formCoalition([], {
+      partnerName: 'VC',
+      partnerPartyId: 'VC',
+      type: 'legislative',
+      terms: 'x',
+      forStage: 'legislative',
+      cycle: 0,
+    });
+    expect(coalitionShareBonus(coalitions, 'legislative')).toBeGreaterThan(0);
+    expect(coalitionShareBonus(coalitions, 'local')).toBe(0);
+  });
+});
+
+/* ---- Deudas de donantes --------------------------------------------------- */
+
+describe('donor debts', () => {
+  it('un donante corporativo condicionado puede detonar un escándalo', () => {
+    const state = buildPartyState(baseChoices);
+    const withDonor = {
+      ...state,
+      finances: registerDonor(state.finances, {
+        kind: 'corporate',
+        name: 'Grupo Korniak',
+        amount: 4.5,
+        conditions: 'No tocar concesiones energéticas.',
+      }),
+      brand: { ...state.brand, perceivedCorruption: 70 }, // presión alta → casi seguro
+    };
+    const result = checkDonorDebts({ ...withDonor, currentCycleIndex: 1 });
+    // Con presión alta debería cobrarse en algún ciclo; probamos varios índices.
+    const triggered =
+      result.scandals.length > 0 ||
+      [2, 3, 4].some((ci) => checkDonorDebts({ ...withDonor, currentCycleIndex: ci }).scandals.length > 0);
+    expect(triggered).toBe(true);
+  });
+
+  it('donantes no corporativos no generan deuda', () => {
+    const state = buildPartyState(baseChoices);
+    const withDonor = {
+      ...state,
+      finances: registerDonor(state.finances, {
+        kind: 'small_donors',
+        name: 'Pequeños donantes',
+        amount: 1.2,
+        conditions: 'Cuentas públicas auditables.',
+      }),
+    };
+    const result = checkDonorDebts({ ...withDonor, currentCycleIndex: 1 });
+    expect(result.scandals).toHaveLength(0);
+  });
+});
+
+/* ---- Selección contextual de eventos -------------------------------------- */
+
+describe('contextual events', () => {
+  it('no ofrece eventos de facciones que el partido no tiene', () => {
+    // Un partido ideológico no tiene old_guard.
+    const ideological = buildPartyState({ ...baseChoices, type: 'ideological' });
+    const events = eligibleEvents(ideological, { trigger: 'cycle_start' });
+    expect(events.find((e) => e.id === 'old_guard_demands_endorsements')).toBeUndefined();
+  });
+
+  it('ofrece el evento de vieja guardia a un partido tradicional', () => {
+    const traditional = buildPartyState({ ...baseChoices, type: 'traditional' });
+    const ids = recomputePendingEvents(traditional, 12);
+    expect(ids).toContain('old_guard_demands_endorsements');
+  });
+
+  it('el aviso de polarización solo aparece con polarización alta', () => {
+    const state = buildPartyState(baseChoices);
+    const low = { ...state, brand: { ...state.brand, polarization: 10 } };
+    const high = { ...state, brand: { ...state.brand, polarization: 70 } };
+    expect(
+      eligibleEvents(low, { trigger: 'cycle_start' }).some((e) => e.id === 'poll_polarization_warning'),
+    ).toBe(false);
+    expect(
+      eligibleEvents(high, { trigger: 'cycle_start' }).some((e) => e.id === 'poll_polarization_warning'),
+    ).toBe(true);
   });
 });
 

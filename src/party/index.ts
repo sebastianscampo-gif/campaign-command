@@ -23,6 +23,7 @@ export { PARTY_EVENTS } from './content/events';
 export { PARTY_ACTION_DECK } from './content/actions';
 export { buildPartyState } from './setup';
 export type { PartySetupChoices } from './setup';
+export { activeCoalitions, coalitionShareBonus, formCoalition } from './coalitions';
 export { computePartyLegacy } from './legacy';
 export type { PartyLegacySummary } from './legacy';
 export { PARTY_LEGACY_LABELS } from './content/narrative';

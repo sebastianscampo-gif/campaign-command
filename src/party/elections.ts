@@ -8,6 +8,7 @@
 import { rngFor } from '@/sim/random';
 import { brandStrengthScore } from './brand';
 import { endorsedPopularitySum } from './candidates';
+import { coalitionShareBonus } from './coalitions';
 import { activeMemories, netMemoryImpact } from './memory';
 import { activeScandals } from './scandals';
 import { nationalSupportAvg, provincesAboveThreshold } from './territory';
@@ -54,6 +55,9 @@ export function computeNationalShare(
   // Influencia mediática.
   const mediaBonus = (state.finances.mediaInfluence - 50) * 0.15;
 
+  // Coaliciones activas aplicables a esta etapa.
+  const coalitionBonus = coalitionShareBonus(state.coalitions, scenario.stage);
+
   // Stage modifier: nacionales pesa más marca, locales pesa más territorio.
   let stageMod = 0;
   if (scenario.stage === 'national') stageMod = brand * 0.4 + endorsedAvg * 0.05;
@@ -71,7 +75,8 @@ export function computeNationalShare(
     memoryBonus +
     disciplineBonus +
     moneyBonus +
-    mediaBonus -
+    mediaBonus +
+    coalitionBonus -
     scandalsPenalty +
     noise;
 

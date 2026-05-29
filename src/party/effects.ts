@@ -9,6 +9,7 @@
 
 import { applyBrandDelta } from './brand';
 import { patchCandidate } from './candidates';
+import { formCoalition } from './coalitions';
 import { patchFaction, computeInternalDiscipline } from './factions';
 import { applyFinancePatch, registerDonor } from './finance';
 import { shiftIdeology } from './ideology';
@@ -114,6 +115,19 @@ export function applyOutcome(
           name: outcome.name,
           amount: outcome.amount,
           conditions: outcome.conditions,
+        }),
+      };
+    }
+    case 'coalition': {
+      return {
+        ...state,
+        coalitions: formCoalition(state.coalitions, {
+          partnerName: outcome.partnerName,
+          partnerPartyId: outcome.partnerPartyId,
+          type: outcome.coalitionType,
+          terms: outcome.terms,
+          forStage: outcome.forStage,
+          cycle: state.currentCycleIndex,
         }),
       };
     }

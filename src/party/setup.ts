@@ -11,7 +11,7 @@ import { PARTY_TYPES } from './content/partyTypes';
 import { FACTION_TEMPLATES } from './content/factions';
 import { seedCandidatePool } from './content/candidates';
 import { PARTY_ELECTIONS } from './content/elections';
-import { PARTY_EVENTS } from './content/events';
+import { recomputePendingEvents } from './events';
 import type {
   Faction,
   FactionKind,
@@ -141,17 +141,6 @@ function buildCycles(): PartyCycle[] {
   }));
 }
 
-function pendingEventsForCycle(cycleIndex: number): string[] {
-  const scenario = PARTY_ELECTIONS[cycleIndex];
-  if (!scenario) return [];
-  // Tomamos los primeros 2 eventos elegibles del tipo cycle_start.
-  return PARTY_EVENTS.filter(
-    (e) => e.trigger === 'cycle_start' || e.trigger === 'always',
-  )
-    .slice(0, 2)
-    .map((e) => e.id);
-}
-
 function initialGoalsForCycle(cycleIndex: number): string[] {
   const scenario = PARTY_ELECTIONS[cycleIndex];
   if (!scenario) return [];
@@ -196,7 +185,7 @@ export function buildPartyState(choices: PartySetupChoices): PartyState {
   const territory = buildTerritory(choices.originRegion, choices.growthStrategy, choices.type);
   const cycles = buildCycles();
 
-  return {
+  const state: PartyState = {
     status: 'precampaign',
     profile: profileFromChoices(choices),
     ideology: choices.ideology,
@@ -221,7 +210,7 @@ export function buildPartyState(choices: PartySetupChoices): PartyState {
     actionPoints: 8,
     completedElections: [],
     activePartyEvent: null,
-    pendingEventIds: pendingEventsForCycle(0),
+    pendingEventIds: [],
     firedEventIds: [],
     memory: [],
     goals: initialGoalsForCycle(0),
@@ -229,6 +218,11 @@ export function buildPartyState(choices: PartySetupChoices): PartyState {
     legacyLabel: null,
     recentNarratives: [],
   };
+
+  // La cola de eventos se calcula con el estado ya armado (gate por facción
+  // y precondiciones contextuales).
+  state.pendingEventIds = recomputePendingEvents(state);
+  return state;
 }
 
-export { pendingEventsForCycle, initialGoalsForCycle };
+export { initialGoalsForCycle };

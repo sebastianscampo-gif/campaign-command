@@ -4,7 +4,23 @@
    candidatos, ideología, coaliciones, escándalos.
    ============================================================================= */
 
-import type { PartyEvent } from '../types';
+import type { FactionKind, PartyEvent, PartyState } from '../types';
+
+/* ---- Helpers de precondición ---------------------------------------------- */
+
+/** El evento solo es elegible si esa facción está activa en el partido. */
+const requiresFaction = (kind: FactionKind) => (state: PartyState): boolean =>
+  Boolean(state.factions[kind]);
+
+/** Hay al menos un candidato con riesgo de escándalo elevado. */
+const hasRiskyCandidate = (state: PartyState): boolean =>
+  Object.values(state.candidatePool).some((c) => c.scandalRisk >= 40);
+
+/** Hay al menos un candidato avalado y ambicioso (apto para amenazar). */
+const hasAmbitiousStar = (state: PartyState): boolean =>
+  Object.values(state.candidatePool).some(
+    (c) => c.endorsed && c.ambition >= 65 && c.popularity >= 55,
+  );
 
 export const PARTY_EVENTS: readonly PartyEvent[] = [
   {
@@ -15,6 +31,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
       'Ortúzar y los cuadros históricos te visitan. "Llevamos décadas armando esto. Si no hay listas con nuestra gente, vas a tener que explicarle a las bases por qué los descartaste."',
     trigger: 'cycle_start',
     factionId: 'old_guard',
+    condition: requiresFaction('old_guard'),
     oneShot: true,
     options: [
       {
@@ -66,6 +83,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
       'Las Juventudes inundan redes con un manifiesto exigiendo que el partido se corra a la izquierda y rompa con el "consenso tibio". Aguirre, la líder visible, te cita en privado.',
     trigger: 'cycle_start',
     factionId: 'youth',
+    condition: requiresFaction('youth'),
     oneShot: true,
     options: [
       {
@@ -116,6 +134,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
     description:
       'Tu candidato más popular convoca prensa por su cuenta y filtra que está "evaluando opciones" si no recibe el aval para la próxima elección importante.',
     trigger: 'pre_election',
+    condition: hasAmbitiousStar,
     oneShot: true,
     options: [
       {
@@ -163,6 +182,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
     description:
       'El Grupo Korniak ofrece $4.5M para la campaña a cambio de un compromiso silencioso: no tocar las concesiones energéticas durante el próximo mandato.',
     trigger: 'cycle_start',
+    condition: (state) => state.finances.money < 6,
     oneShot: true,
     options: [
       {
@@ -211,6 +231,8 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
     description:
       'Apareció en tapa una nota con detalles internos de las negociaciones del partido. Sabés que solo 3 personas tenían esa info, y todas son de la misma facción.',
     trigger: 'cycle_start',
+    factionId: 'populists',
+    condition: requiresFaction('populists'),
     oneShot: true,
     options: [
       {
@@ -257,6 +279,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
       'Saavedra te plantea: si no maneja personalmente la lista del Norte, no garantiza la maquinaria. Y sin esa maquinaria, no hay forma de ganar en la región.',
     trigger: 'pre_election',
     factionId: 'regionals',
+    condition: requiresFaction('regionals'),
     oneShot: true,
     options: [
       {
@@ -318,6 +341,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
           { kind: 'faction', factionId: 'business', loyaltyDelta: 8 },
           { kind: 'faction', factionId: 'radicals', loyaltyDelta: -15, ruptureRiskDelta: 18 },
           { kind: 'ideology', axis: 'economic', delta: 0.1 },
+          { kind: 'coalition', partnerName: 'Vanguardia Cívica', partnerPartyId: 'VC', coalitionType: 'legislative', terms: 'Bloque legislativo común, programa moderado.', forStage: 'legislative' },
           { kind: 'memory', type: 'coalition_formed', description: 'Cerraste coalición con VC.', impact: 3, severity: 'medium' },
         ],
       },
@@ -342,6 +366,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
     description:
       'Una encuesta interna muestra que el partido sumó 4 puntos en intención de voto, pero su imagen negativa también subió 6 puntos. Estás creciendo y enojando al mismo tiempo.',
     trigger: 'cycle_start',
+    condition: (state) => state.brand.polarization >= 40,
     oneShot: true,
     options: [
       {
@@ -378,6 +403,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
     description:
       'Aparecen denuncias por uso indebido de recursos en una intendencia controlada por uno de nuestros candidatos. La nota está creciendo en redes y portadas.',
     trigger: 'cycle_start',
+    condition: hasRiskyCandidate,
     oneShot: true,
     options: [
       {
@@ -470,6 +496,7 @@ export const PARTY_EVENTS: readonly PartyEvent[] = [
       'Mamani plantea: o el partido firma un compromiso público con la reforma laboral protectiva, o la facción no garantiza movilizar en la elección legislativa.',
     trigger: 'pre_election',
     factionId: 'union',
+    condition: requiresFaction('union'),
     oneShot: true,
     options: [
       {

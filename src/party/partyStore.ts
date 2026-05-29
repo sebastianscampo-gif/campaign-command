@@ -11,6 +11,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { applyPartyAction, PARTY_ACTIONS } from './actions';
 import { applyBrandDelta, decayBrand } from './brand';
+import { checkDonorDebts } from './donors';
 import { applyOutcomes } from './effects';
 import {
   brandRewardFor,
@@ -18,7 +19,7 @@ import {
   resolvePartyElection,
 } from './elections';
 import { ageFactions, computeInternalDiscipline } from './factions';
-import { pickNextEvent } from './events';
+import { pickNextEvent, recomputePendingEvents } from './events';
 import { computePartyLegacy } from './legacy';
 import { addMemory, ageMemoriesOneCycle } from './memory';
 import { cycleNarratives, electionHeadline } from './narrative';
@@ -26,7 +27,6 @@ import { ageScandalsOneCycle } from './scandals';
 import {
   buildPartyState,
   initialGoalsForCycle,
-  pendingEventsForCycle,
   type PartySetupChoices,
 } from './setup';
 import type {
@@ -85,13 +85,18 @@ export const usePartyStore = create<PartyStore>()(
         const option = event.options.find((o) => o.id === optionId);
         if (!option) return;
         let next = applyOutcomes(current, option.outcomes);
+        const firedEventIds = event.oneShot
+          ? [...next.firedEventIds, event.id]
+          : next.firedEventIds;
         next = {
           ...next,
           activePartyEvent: null,
-          firedEventIds: event.oneShot ? [...next.firedEventIds, event.id] : next.firedEventIds,
-          pendingEventIds: next.pendingEventIds.filter((id) => id !== event.id),
+          firedEventIds,
           internalDiscipline: computeInternalDiscipline(next.factions),
         };
+        // Recalcular la cola: los outcomes pueden haber habilitado o
+        // deshabilitado eventos contextuales (ej. subir polarización).
+        next = { ...next, pendingEventIds: recomputePendingEvents(next) };
         set({ state: next });
       },
 
@@ -182,29 +187,39 @@ export const usePartyStore = create<PartyStore>()(
 
         const nextIndex = current.currentCycleIndex + 1;
         const memoryAged = ageMemoriesOneCycle(current.memory);
-        const scandalsAged = ageScandalsOneCycle(current.scandals);
         const factionsAged = ageFactions(current.factions);
         const brandDecayed = decayBrand(current.brand);
 
-        set({
-          state: {
-            ...current,
-            currentCycleIndex: nextIndex,
-            status: 'precampaign',
-            actionPoints: ACTION_POINTS_PER_CYCLE,
-            memory: memoryAged,
-            scandals: scandalsAged,
-            factions: factionsAged,
-            brand: brandDecayed,
-            internalDiscipline: computeInternalDiscipline(factionsAged),
-            pendingEventIds: pendingEventsForCycle(nextIndex),
-            goals: initialGoalsForCycle(nextIndex),
-            recentNarratives: [],
-            cycles: current.cycles.map((c, i) =>
-              i === nextIndex ? { ...c, status: 'precampaign' as const } : c,
-            ),
-          },
-        });
+        // Deudas de donantes: las condiciones corporativas pueden cobrarse
+        // y detonar un escándalo de financiamiento dudoso.
+        const debts = checkDonorDebts({ ...current, currentCycleIndex: nextIndex });
+        const scandalsAged = ageScandalsOneCycle([
+          ...current.scandals,
+          ...debts.scandals,
+        ]);
+
+        // Construimos el estado base del nuevo ciclo y luego calculamos la cola
+        // contextual sobre él.
+        const nextState: PartyState = {
+          ...current,
+          currentCycleIndex: nextIndex,
+          status: 'precampaign',
+          actionPoints: ACTION_POINTS_PER_CYCLE,
+          memory: memoryAged,
+          scandals: scandalsAged,
+          factions: factionsAged,
+          brand: brandDecayed,
+          internalDiscipline: computeInternalDiscipline(factionsAged),
+          finances: { ...current.finances, donors: debts.donors },
+          pendingEventIds: [],
+          goals: initialGoalsForCycle(nextIndex),
+          recentNarratives: debts.narratives,
+          cycles: current.cycles.map((c, i) =>
+            i === nextIndex ? { ...c, status: 'precampaign' as const } : c,
+          ),
+        };
+
+        set({ state: { ...nextState, pendingEventIds: recomputePendingEvents(nextState) } });
       },
 
       endParty: () => {

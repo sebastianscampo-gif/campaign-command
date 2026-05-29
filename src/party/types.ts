@@ -192,6 +192,8 @@ export interface DonorRecord {
   readonly conditions: string;
   /** Si está activo / aceptado. */
   active: boolean;
+  /** Si la condición ya detonó un escándalo (deuda cobrada). */
+  triggered?: boolean;
 }
 
 export interface PartyFinances {
@@ -378,6 +380,7 @@ export type PartyEventOutcome =
   | { readonly kind: 'memory'; readonly type: PartyMemoryType; readonly description: string; readonly impact: number; readonly severity?: 'low' | 'medium' | 'high' | 'critical'; readonly region?: ProvinceId; readonly factionId?: FactionKind; readonly candidateId?: string; readonly canRecur?: boolean }
   | { readonly kind: 'scandal'; readonly scandalType: ScandalType; readonly title: string; readonly description: string; readonly severity: ScandalSeverity; readonly factionId?: FactionKind; readonly region?: ProvinceId }
   | { readonly kind: 'donor'; readonly donorKind: DonorKind; readonly name: string; readonly amount: number; readonly conditions: string }
+  | { readonly kind: 'coalition'; readonly partnerName: string; readonly partnerPartyId: PartyId; readonly coalitionType: CoalitionType; readonly terms: string; readonly forStage: ElectionStage | 'all' }
   | { readonly kind: 'candidate_threat'; readonly candidateId: string; readonly loyaltyDelta: number; readonly ambitionDelta: number }
   | { readonly kind: 'label'; readonly add?: string; readonly remove?: string }
   | { readonly kind: 'action_points'; readonly delta: number };
@@ -399,6 +402,11 @@ export interface PartyEvent {
   readonly factionId?: FactionKind;
   readonly oneShot: boolean;
   readonly options: readonly PartyEventOption[];
+  /**
+   * Precondición contextual opcional. Si está definida y devuelve false, el
+   * evento no es elegible en ese estado. No se serializa (vive en el catálogo).
+   */
+  readonly condition?: (state: PartyState) => boolean;
 }
 
 /* ---- Acciones del Party Mode ---------------------------------------------- */
